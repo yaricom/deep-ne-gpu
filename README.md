@@ -27,16 +27,16 @@ Follow instructions under ./gym_tensorflow/README on how to compile the optimize
 
 To train GA on Atari just run:
 ```
-python ga.py -c configurations/ga_atari_config.json
+python ga.py -c configurations/ga_atari_config.json -o out
 ```
 Random search (It's a special case of GA where 0 individuals become parents):
 ```
-python ga.py -c configurations/rs_atari_config.json
+python ga.py -c configurations/rs_atari_config.json -o out
 ```
 
 Evolution Strategies:
 ```
-python es.py -c configurations/es_atari_config.json
+python es.py -c configurations/es_atari_config.json -o out
 ```
 
 Visualizing policies is possible if you install gym with `pip install gym` and run:
