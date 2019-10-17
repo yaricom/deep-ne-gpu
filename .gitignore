@@ -1,6 +1,9 @@
 # The output directory
 out*/
 
+# The Atari-py 
+**/atari-py/*
+
 # MacOS specific
 .DS_Store
 
