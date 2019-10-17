@@ -45,9 +45,12 @@ class WorkerHub(object):
     def worker_callback(self, worker, subworker, result):
         worker_task = (worker, subworker)
         self.available_workers.put(worker_task)
-        task_id = self._cache[worker_task]
-        del self._cache[worker_task]
-        self.done_buffer.put((task_id, result))
+        if worker_task in self._cache:
+            task_id = self._cache[worker_task]
+            del self._cache[worker_task]
+            self.done_buffer.put((task_id, result))
+        else:
+            tlogger.warn('WorkerHub: Worker task not found in cache %s', worker_task)
 
     @staticmethod
     def _handle_input(self):
