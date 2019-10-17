@@ -35,6 +35,8 @@ import neuroevolution.models
 import gym_tensorflow
 import tabular_logger as tlogger
 
+import utils
+
 
 class TrainingState(object):
     def __init__(self, config):
@@ -108,8 +110,13 @@ def main(config, out_dir):
 
     log_dir = tlogger.log_dir()
 
+    # clear output directory
+    utils.clear_output(log_dir)
+
     tlogger.info(json.dumps(config, indent=4, sort_keys=True))
     tlogger.info('Logging to: {}'.format(log_dir))
+    exit(0)
+
     Model = neuroevolution.models.__dict__[config['model']]
     all_tstart = time.time()
     def make_env(b):
