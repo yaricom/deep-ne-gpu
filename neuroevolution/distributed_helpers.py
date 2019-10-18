@@ -35,12 +35,14 @@ class WorkerHub(object):
             args=(self,)
             )
         self._input_handler._state = 0
+        tlogger.info('WorkerHub: _input_handler initialized')
 
         self._output_handler = threading.Thread(
             target=WorkerHub._handle_output,
             args=(self,)
             )
         self._output_handler._state = 0
+        tlogger.info('WorkerHub: _output_handler initialized')
 
     def worker_callback(self, worker, subworker, result):
         worker_task = (worker, subworker)
@@ -50,7 +52,8 @@ class WorkerHub(object):
             del self._cache[worker_task]
             self.done_buffer.put((task_id, result))
         else:
-            tlogger.warn('WorkerHub: Worker task not found in cache %s', worker_task)
+            tlogger.warn('WorkerHub: Worker task not found in cache %s' % worker_task)
+            tlogger.warn('WorkerHub: Unable to process result %s' % result)
 
     @staticmethod
     def _handle_input(self):
@@ -58,16 +61,17 @@ class WorkerHub(object):
             while True:
                 worker_task = self.available_workers.get()
                 if worker_task is None:
-                    tlogger.info('WorkerHub._handle_input done')
+                    tlogger.info('WorkerHub._handle_input (available_workers) done')
                     break
                 worker, subworker = worker_task
 
                 task = self.input_queue.get()
                 if task is None:
-                    tlogger.info('WorkerHub._handle_input done')
+                    tlogger.info('WorkerHub._handle_input (input_queue) done')
                     break
                 task_id, task = task
                 self._cache[worker_task] = task_id
+                # tlogger.info('WorkerHub: put task id: %s in cache keyed by worker task: %s' % (task_id, worker_task))
 
                 worker.run_async(subworker, task, self.worker_callback)
         except:
