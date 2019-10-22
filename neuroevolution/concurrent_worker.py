@@ -153,7 +153,6 @@ class ConcurrentWorkers(object):
 
         tlogger.info('CW: Steps counter %s' % self.steps_counter)
 
-
     def eval_async(self, theta, extras, max_frames=None, callback=None, error_callback=None):
         return self.async_hub.run_async((theta, extras, max_frames), callback=callback, error_callback=error_callback)
 
@@ -166,9 +165,13 @@ class ConcurrentWorkers(object):
         tstart_all = time.time()
         tstart = time.time()
 
+        def error_callback(value):
+            tlogger.warn("Error while running async task", value)
+
+
         tasks = []
         for t in it:
-            tasks.append(self.eval_async(*t, max_frames=max_frames))
+            tasks.append(self.eval_async(*t, max_frames=max_frames, error_callback=error_callback))
             if time.time() - tstart > logging_interval:
                 cur_timesteps = self.sess.run(self.steps_counter)
                 tlogger.info('Num timesteps:', cur_timesteps, 'per second:', (cur_timesteps-last_timesteps)//(time.time()-tstart), 'num episodes finished: {}/{}'.format(sum([1 if t.ready() else 0 for t in tasks]), len(tasks)))
