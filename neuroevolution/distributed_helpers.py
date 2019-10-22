@@ -46,14 +46,17 @@ class WorkerHub(object):
 
     def worker_callback(self, worker, subworker, result):
         worker_task = (worker, subworker)
-        self.available_workers.put(worker_task)
         if worker_task in self._cache:
             task_id = self._cache[worker_task]
             del self._cache[worker_task]
             self.done_buffer.put((task_id, result))
         else:
-            tlogger.warn('WorkerHub: Worker task not found in cache %s' % worker_task)
-            tlogger.warn('WorkerHub: Unable to process result %s' % result)
+            tlogger.warn('WorkerHub: Worker task not found in cache', worker_task)
+            tlogger.warn('WorkerHub: Subworker', subworker)
+            tlogger.warn('WorkerHub: Unable to process result', result)
+
+        # Return worker back
+        self.available_workers.put(worker_task)
 
     @staticmethod
     def _handle_input(self):
@@ -61,19 +64,19 @@ class WorkerHub(object):
             while True:
                 worker_task = self.available_workers.get()
                 if worker_task is None:
-                    tlogger.info('WorkerHub._handle_input (available_workers) done')
+                    tlogger.info('WorkerHub._handle_input NO MORE WORKERS AWAILABLE')
                     break
                 worker, subworker = worker_task
 
                 task = self.input_queue.get()
                 if task is None:
-                    tlogger.info('WorkerHub._handle_input (input_queue) done')
+                    tlogger.info('WorkerHub._handle_input NO MORE INPUTS AWAILABLE')
                     break
                 task_id, task = task
                 self._cache[worker_task] = task_id
                 # tlogger.info('WorkerHub: put task id: %s in cache keyed by worker task: %s' % (task_id, worker_task))
 
-                worker.run_async(subworker, task, self.worker_callback)
+                worker.run_async(subworker, task, callback=self.worker_callback)
         except:
             tlogger.exception('WorkerHub._handle_input exception thrown')
             raise
