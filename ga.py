@@ -111,7 +111,7 @@ def main(config, out_dir):
     log_dir = tlogger.log_dir()
 
     # clear output directory
-    utils.clear_output(log_dir)
+    # utils.clear_output(log_dir)
 
     tlogger.info(json.dumps(config, indent=4, sort_keys=True))
     tlogger.info('Logging to: {}'.format(log_dir))
