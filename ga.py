@@ -25,6 +25,7 @@ import base64
 import pickle
 import tempfile
 import os
+import csv
 from shutil import copyfile
 import tensorflow as tf
 import numpy as np
@@ -92,6 +93,8 @@ class Offspring(object):
         self.validation_rewards = validation_rewards
         self.validation_ep_len = validation_ep_len
 
+        print("Offspring [seeds: %d, rewards: %d, episode lengths: %d]" % (len(seeds), len(rewards), len(ep_len)))
+
     @property
     def fitness(self):
         return np.mean(self.rewards)
@@ -99,10 +102,52 @@ class Offspring(object):
     @property
     def training_steps(self):
         return np.sum(self.ep_len)
+    
+    @property
+    def policy_seed(self):
+        return self.seeds[0]
 
 class OffspringCached(object):
     def __init__(self, seeds):
         self.seeds = seeds
+
+def master_extract_parent_ga(point, iteration):
+
+    path = "snapshots/snapshot_gen_{:04}/".format(int(iteration))
+    if not os.path.exists(path):
+        os.makedirs(path)
+
+    h5_filename = path+"snapshot_parent_{:04d}.h5".format(iteration)
+    policy.save(h5_filename)
+
+    filename = "snapshot_parent_{:04}.dat".format(int(iteration))
+
+    with open(os.path.join(path, filename), 'w+') as file:
+        writer = csv.writer(file, delimiter=' ')
+        fitness = point[0]
+        length = point[1]
+        policy_seed = point[2]
+        seed_length = point[3]
+        row = np.hstack((fitness, length, policy_seed, seed_length))
+        writer.writerow(row)
+
+def master_extract_cloud_ga(curr_task_results, iteration):
+
+    path = "snapshots/snapshot_gen_{:04}/".format(int(iteration))
+    if not os.path.exists(path):
+        os.makedirs(path)
+
+    filename = "snapshot_offspring_{:04}.dat".format(int(iteration))
+    with open(os.path.join(path, filename), 'w+') as file:
+        writer = csv.writer(file, delimiter=' ')
+        for result in curr_task_results:
+            fitness = result.fitness
+            length = result.training_steps
+            policy_seed = result.policy_seed
+            seed_length = len(result.seeds)
+            row = np.hstack((fitness, length, policy_seed, seed_length))
+            writer.writerow(row)
+                
 
 def main(config, out_dir):
     if out_dir is not None:
@@ -110,8 +155,8 @@ def main(config, out_dir):
 
     log_dir = tlogger.log_dir()
 
-    # clear output directory
-    # utils.clear_output(log_dir)
+    if not os.path.exists(log_dir):
+        os.makedirs(log_dir)
 
     tlogger.info(json.dumps(config, indent=4, sort_keys=True))
     tlogger.info('Logging to: {}'.format(log_dir))
@@ -131,14 +176,15 @@ def main(config, out_dir):
         cached_parents = []
         results = []
 
-
         def make_offspring():
             if len(cached_parents) == 0:
                 return worker.model.randomize(rs, noise)
             else:
                 assert len(cached_parents) == config['selection_threshold']
                 parent = cached_parents[rs.randint(len(cached_parents))]
-                return worker.model.mutate(parent, rs, noise, mutation_power=state.sample(state.mutation_power))
+                theta, seeds =  worker.model.mutate(parent, rs, noise, mutation_power=state.sample(state.mutation_power))
+                #print("tetha len: %d, seeds len: %d" % (len(theta), len(seeds)))
+                return theta, seeds
 
         tlogger.info('GA: Start timing')
         tstart = time.time()
@@ -189,6 +235,9 @@ def main(config, out_dir):
             assert len(results) == config['population_size']
             rewards = np.array([a.fitness for a in results])
             population_timesteps = sum([a.training_steps for a in results])
+
+            # Save offsprings
+            master_extract_cloud_ga(results, state.it)
 
             state.population = sorted(results, key=lambda x:x.fitness, reverse=True)
             tlogger.record_tabular('PopulationEpRewMax', np.max(rewards))
