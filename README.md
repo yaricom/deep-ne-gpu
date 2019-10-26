@@ -44,3 +44,7 @@ Visualizing policies is possible if you install gym with `pip install gym` and r
 python -m neuroevolution.display
 ```
 We currently have one example policy but more will be added in the future.
+
+# Credentials
+
+Initial implementation created by the Uber AI lab and available at https://github.com/uber-research/deep-neuroevolution
