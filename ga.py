@@ -117,9 +117,6 @@ def master_extract_parent_ga(point, iteration):
     if not os.path.exists(path):
         os.makedirs(path)
 
-    h5_filename = path+"snapshot_parent_{:04d}.h5".format(iteration)
-    policy.save(h5_filename)
-
     filename = "snapshot_parent_{:04}.dat".format(int(iteration))
 
     with open(os.path.join(path, filename), 'w+') as file:
