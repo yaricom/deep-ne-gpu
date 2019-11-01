@@ -93,7 +93,7 @@ class Offspring(object):
         self.validation_rewards = validation_rewards
         self.validation_ep_len = validation_ep_len
 
-        print("Offspring [seeds: %d, rewards: %d, episode lengths: %d]" % (len(seeds), len(rewards), len(ep_len)))
+        # print("Offspring [seeds: %d, rewards: %d, episode lengths: %d]" % (len(seeds), len(rewards), len(ep_len)))
 
     @property
     def fitness(self):
