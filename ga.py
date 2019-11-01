@@ -265,7 +265,12 @@ def main(config, out_dir):
             elite_theta = worker.model.compute_weights_from_seeds(noise, state.elite.seeds, cache=cached_parents)
             _, population_elite_evals, population_elite_evals_timesteps = worker.monitor_eval_repeated([(elite_theta, state.elite.seeds)], max_frames=None, num_episodes=config['num_test_episodes'])[0]
 
-            # Save elite from current generation
+            # Save elite of the current generation
+            parent_bc_point = []
+            parent_bc_point.append(np.mean(population_elite_evals))
+            parent_bc_point.append(np.sum(population_elite_evals_timesteps))
+            parent_bc_point.append(state.elite.policy_seed)
+            parent_bc_point.append(len(state.elite.seeds))
             master_extract_parent_ga(parent_bc_point, state.it)
 
             # Log Results
