@@ -265,6 +265,9 @@ def main(config, out_dir):
             elite_theta = worker.model.compute_weights_from_seeds(noise, state.elite.seeds, cache=cached_parents)
             _, population_elite_evals, population_elite_evals_timesteps = worker.monitor_eval_repeated([(elite_theta, state.elite.seeds)], max_frames=None, num_episodes=config['num_test_episodes'])[0]
 
+            # Save elite from current generation
+            master_extract_parent_ga(parent_bc_point, state.it)
+
             # Log Results
             validation_timesteps = sum(population_validation_len)
             timesteps_this_iter = population_timesteps + validation_timesteps
